@@ -248,15 +248,7 @@ assign_coefficient_regs(nir_shader *nir, struct agx_varyings_fs *var)
       if (!(smooth || flat || noperspective))
          continue;
 
-      /* From the GLSL 4.60 spec ("Input Layout Qualifiers"):
-       *
-       *    when location aliasing, the aliases sharing the location must have
-       *    the same underlying numerical type and bit width (floating-point or
-       *    integer, 32-bit versus 64-bit, etc.) and the same auxiliary storage
-       *    and interpolation qualification.
-       *
-       * SPIR-V should obey this as well although the spec text is muddier.
-       */
+      /* */
       assert((smooth + flat + noperspective) == 1 &&
              "slots must have consistent interpolation");
 
@@ -2261,9 +2253,9 @@ agx_emit_tex(agx_builder *b, nir_tex_instr *instr)
          texture = index;
          break;
       case nir_tex_src_sampler_handle:
-         b->shader->out->uses_sampler_heap = true;
          nir_intrinsic_instr *intr = nir_src_as_intrinsic(instr->src[i].src);
          if (intr && intr->intrinsic == nir_intrinsic_bindless_sampler_agx) {
+            b->shader->out->uses_sampler_heap = true;
             /* Heap offset */
             sampler = agx_src_index(&intr->src[1]);
          } else {
