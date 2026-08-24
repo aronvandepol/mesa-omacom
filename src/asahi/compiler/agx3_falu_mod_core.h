@@ -1,0 +1,48 @@
+/*
+ * Copyright 2026 Aurora Silicon
+ * SPDX-License-Identifier: MIT
+ * 
+ * AGX3 f32 source and output modifiers. Compact forms handle unmodified
+ * operations; long forms carry independent abs/neg bits and result saturation.
+ * ADD may commute both operands and their lifetime hints.
+ */
+
+#pragma once
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "asahi/lib/agx_chip.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+struct agx3_falu_mods {
+   bool src0_abs; /* f47 on the f35 slot */
+   bool src0_neg; /* f48 */
+   bool src1_abs; /* f30 on the f18 slot */
+   bool src1_neg; /* f31 */
+   bool addend_abs; /* f64, ffma only */
+   bool addend_neg; /* f65, ffma only */
+   bool saturate;   /* f14 */
+};
+
+#define AGX3_FALU_MOD_MAX_LENGTH 16u
+
+/* dest = sat?(srcmods(src0) OP srcmods(src1)). abs applies before neg. */
+bool agx3_falu_add_mod(enum agx_isa_encoding enc, uint16_t dest, uint16_t src0,
+                       uint16_t src1, const struct agx3_falu_mods *m,
+                       uint8_t out[AGX3_FALU_MOD_MAX_LENGTH], uint8_t *len);
+bool agx3_falu_mul_mod(enum agx_isa_encoding enc, uint16_t dest, uint16_t src0,
+                       uint16_t src1, const struct agx3_falu_mods *m,
+                       uint8_t out[AGX3_FALU_MOD_MAX_LENGTH], uint8_t *len);
+/* dest = sat?(srcmods(src0) * srcmods(src1) + addendmods(addend)). */
+bool agx3_falu_fma_mod(enum agx_isa_encoding enc, uint16_t dest, uint16_t src0,
+                       uint16_t src1, uint16_t addend,
+                       const struct agx3_falu_mods *m,
+                       uint8_t out[AGX3_FALU_MOD_MAX_LENGTH], uint8_t *len);
+
+#ifdef __cplusplus
+}
+#endif
