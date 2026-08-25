@@ -1,0 +1,47 @@
+/*
+ * Copyright 2026 Aurora Silicon
+ * SPDX-License-Identifier: MIT
+ * 
+ * AGX3 special-register reads are asynchronous producers. f12 is the slot,
+ * f21 the register number, and f10/f24 the width. The compact four-byte form
+ * cannot carry waits or a wide destination; those use the eight-byte form.
+ */
+
+#pragma once
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#include "asahi/lib/agx_chip.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/* Destination width class, the value of f10/f24. */
+enum agx3_sr_width {
+   AGX3_SR_W16 = 1,
+   AGX3_SR_W32 = 2,
+};
+
+#define AGX3_SR_MAX_LENGTH 8u
+
+struct agx3_sr_desc {
+   uint16_t dest;      /* destination register, 16-bit half units */
+   enum agx3_sr_width width;
+   uint8_t sr;         /* Apple special-register number (field f21) */
+   uint8_t slot;       /* scoreboard slot this read signals: 1..6 (b) / 1..8 (c) */
+   uint16_t wait_mask; /* bit i sets wait on slot i+1 */
+};
+
+/* True if (sr, width) has a byte-exact corpus witness. Unwitnessed pairs must
+ * not be emitted: the composer would accept any f21 value the field can hold,
+ * so this table -- not the encoder -- is the fail-closed gate. */
+bool agx3_sr_witnessed(uint8_t sr, enum agx3_sr_width width);
+
+bool agx3_sr_encode(enum agx_isa_encoding enc, const struct agx3_sr_desc *d,
+                    uint8_t out[AGX3_SR_MAX_LENGTH], uint8_t *len);
+
+#ifdef __cplusplus
+}
+#endif
