@@ -20,9 +20,20 @@ extern "C" {
 
 #define AGX3_VARY_MAX_LENGTH 10u
 
+enum agx3_vary_location {
+   AGX3_VARY_CENTER = 0,
+   AGX3_VARY_CENTROID = 1,
+};
+
 /* Interpolate coefficient `coef_index` into `dest`. `perspective` selects the
  * perspective-correct linear iterator (the caller pairs it with the software
- * rcp/mul sequence). Center location only for now. */
+ * rcp/mul sequence). */
+bool agx3_vary_interp_at(enum agx_isa_encoding enc, uint16_t dest,
+                         uint16_t coef_index, bool perspective,
+                         enum agx3_vary_location location,
+                         uint8_t out[AGX3_VARY_MAX_LENGTH], uint8_t *len);
+
+/* Backward-compatible center-location wrapper. */
 bool agx3_vary_interp(enum agx_isa_encoding enc, uint16_t dest,
                       uint16_t coef_index, bool perspective,
                       uint8_t out[AGX3_VARY_MAX_LENGTH], uint8_t *len);
