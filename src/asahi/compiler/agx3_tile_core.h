@@ -26,7 +26,8 @@ enum agx3_tile_width {
    AGX3_TILE_W32 = 2,
 };
 
-/* Coverage selector: 1x (one sample) or per-sample (MSAA). */
+/* PER_SAMPLE is reserved for the grounded field value but is not accepted by
+ * this bounded codec until its sample/mask source semantics are known. */
 enum agx3_tile_coverage {
    AGX3_TILE_COV_1X = 1,
    AGX3_TILE_COV_PER_SAMPLE = 2,
@@ -41,12 +42,14 @@ bool agx3_tile_store(enum agx_isa_encoding enc, uint16_t data,
                      uint16_t wait_mask, uint8_t out[AGX3_TILE_MAX_LENGTH],
                      uint8_t *len);
 
-/* Load from the tile buffer into `dest` on scoreboard slot `slot`. */
+/* Load from the tile buffer into `dest` on scoreboard slot `slot`.  `first`
+ * and `last` are the load-sequence boundary markers witnessed in the corpus;
+ * AGX3b encodes only `first`, while AGX3c encodes both. */
 bool agx3_tile_load(enum agx_isa_encoding enc, uint16_t dest,
                     enum agx3_tile_width width, uint8_t slot, uint8_t chan_mask,
                     uint16_t tile_off, enum agx3_tile_coverage cov,
-                    uint16_t wait_mask, uint8_t out[AGX3_TILE_MAX_LENGTH],
-                    uint8_t *len);
+                    uint16_t wait_mask, bool first, bool last,
+                    uint8_t out[AGX3_TILE_MAX_LENGTH], uint8_t *len);
 
 #ifdef __cplusplus
 }
