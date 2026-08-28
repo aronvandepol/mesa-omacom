@@ -163,8 +163,9 @@ agx_chip_submission_model(enum agx_chip chip);
  *
  * This is a statement about the compiler, not about the driver. It says a
  * shader compiled for this chip is encoded by the right packer, and that an
- * ungrounded shader is refused rather than mis-encoded -- not that the driver
- * can submit the result. Device open must gate on agx_chip_driver_supported.
+ * ungrounded shader produces no binary rather than a mis-encoded one -- not
+ * that the driver can submit the result. Device open must gate on
+ * agx_chip_driver_supported.
  */
 bool agx_chip_codegen_supported(enum agx_chip chip);
 
@@ -178,6 +179,11 @@ bool agx_chip_driver_supported(enum agx_chip chip);
  * HAL fields added to drm_asahi_params_global. */
 bool agx_params_driver_supported(
    const struct drm_asahi_params_global *params);
+
+/* Exact product name when the chip identity maps to one unambiguous SoC.
+ * Variant letters are not marketing tiers: notably, G17P is A18 Pro rather
+ * than an M5 variant. Returns NULL when one chip identity spans products. */
+const char *agx_chip_exact_product_name(enum agx_chip chip);
 
 /* libagx_g13{g,x} contains AGX2 machine code and USC records. It must never be
  * selected for an AGX3 device, even when no current draw is expected to call a
