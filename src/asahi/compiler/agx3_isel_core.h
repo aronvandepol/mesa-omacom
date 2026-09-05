@@ -32,10 +32,20 @@ enum agx3_isel_operand {
 
 struct agx3_isel_desc {
    uint16_t dest;      /* half-register units */
-   bool dest_16;       /* 16-bit result; both-immediates shape only */
-   uint16_t cmp0;      /* 32-bit register half, compared first */
-   uint16_t cmp1;      /* 32-bit register half, compared second */
+   bool dest_16;       /* 16-bit result, including odd destination halves */
+   uint16_t cmp0;      /* register half, compared first */
+   uint16_t cmp1;      /* register half or unsigned8 immediate */
    enum agx3_isel_icond cond;
+
+   /* Native unsigned register-versus-u8 comparison. The four register
+    * hints follow Mesa source order: both comparands, true, false; immediate
+    * selected operands have no hint. Existing register/register forms retain
+    * their separate native encoding. */
+   bool cmp1_immediate;
+   bool cmp_16;
+   bool explicit_hints;
+   bool cache[4];
+   bool discard[4];
 
    /* The selected operands: each a 32-bit register half or an 8-bit
     * immediate. sel_true is taken when (cmp0 cond cmp1) holds. */
