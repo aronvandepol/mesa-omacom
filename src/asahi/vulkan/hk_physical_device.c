@@ -702,6 +702,9 @@ hk_get_device_features(
       features->multiview = false;
       features->transformFeedback = false;
       features->geometryStreams = false;
+      /* */
+      features->robustImageAccess = false;
+      features->robustImageAccess2 = false;
    }
 }
 
@@ -1051,7 +1054,9 @@ hk_get_device_properties(const struct agx_device *dev,
       .defaultRobustnessVertexInputs =
          VK_PIPELINE_ROBUSTNESS_BUFFER_BEHAVIOR_DISABLED_EXT,
       .defaultRobustnessImages =
-         VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_ROBUST_IMAGE_ACCESS_2_EXT,
+         dev->chip == AGX_CHIP_G17P
+            ? VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_DISABLED_EXT
+            : VK_PIPELINE_ROBUSTNESS_IMAGE_BEHAVIOR_ROBUST_IMAGE_ACCESS_2_EXT,
 
       /* VK_EXT_physical_device_drm gets populated later */
 
