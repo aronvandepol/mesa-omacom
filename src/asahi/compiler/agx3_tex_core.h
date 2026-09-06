@@ -91,26 +91,11 @@ bool agx3_tex_decode_fetch(enum agx_isa_encoding enc, const void *instruction,
                            uint32_t instruction_size,
                            struct agx3_tex_fetch_desc *out);
 
-/*
- * Filtered 2D sample (`texture_sample` -> smp with f78=2), immediate texture
- * and sampler state, in the two LOD shapes Apple's corpus witnesses:
- *
- *  - AGX3_TEX_LOD_AUTO: the implicit-LOD fragment form (f156=1, no LOD
- *    operand). Witnessed in fragment render pipelines only; fragment
- *    shaders are the only place Mesa emits it, matching the hardware's
- *    quad-derivative requirement.
- *  - AGX3_TEX_LOD_LEVEL: explicit immediate level (f37=1, f139=2), the
- *    `level(x)` kernel form; `lod_x64` is the level in 1/64 steps exactly as
- *    the corpus quantizes it (level(2.0) = 128, level(7.25) = 464).
- *
- * Everything else about the sampler family -- arrays, other dimensions,
- * register LOD, bias, gradients, min-LOD, offsets,
- * shadow compare, gather -- remains a deliberate refusal: those axes either
- * lack a witness or need the unmodelled pack_smpir marshalling helper.
- */
+/* */
 enum agx3_tex_lod {
    AGX3_TEX_LOD_AUTO,
    AGX3_TEX_LOD_LEVEL,
+   AGX3_TEX_LOD_REGISTER, /* PACK_SMPIR publishes the per-lane level. */
 };
 
 struct agx3_tex_sample_desc {
@@ -134,6 +119,12 @@ struct agx3_tex_sample_desc {
    bool texture_kill;
    bool sampler_kill;
 };
+
+/* Pack a scalar half-float LOD into native texture operand bank 6. This bank
+ * is separate from GPRs and the coordinate staging bank. */
+bool agx3_tex_stage_lod(enum agx_isa_encoding enc, uint16_t src, uint8_t slot,
+                       uint16_t wait_mask, bool src_cache, bool src_discard,
+                       uint8_t out[AGX3_TEX_MAX_LENGTH], uint8_t *len);
 
 bool agx3_tex_encode_sample(enum agx_isa_encoding enc,
                             const struct agx3_tex_sample_desc *d,
