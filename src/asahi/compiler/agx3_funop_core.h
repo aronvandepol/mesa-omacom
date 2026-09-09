@@ -41,6 +41,19 @@ bool agx3_funop_encode(enum agx_isa_encoding enc, enum agx3_funop op,
                        bool saturate, uint16_t wait_mask,
                        uint8_t out[AGX3_FUNOP_MAX_LENGTH], uint8_t *len);
 
+/* Runtime G16/G17P lowering preserves the allocator's actual cache lifetime. */
+struct agx3_funop_runtime {
+   bool dest_cache;
+   bool src_cache;
+   bool src_discard;
+};
+
+bool agx3_funop_encode_runtime(enum agx_isa_encoding enc, enum agx3_funop op,
+                               uint16_t dest, uint16_t src, bool src_abs,
+                               bool src_neg, bool saturate, uint16_t wait_mask,
+                               const struct agx3_funop_runtime *runtime,
+                               uint8_t out[AGX3_FUNOP_MAX_LENGTH], uint8_t *len);
+
 #ifdef __cplusplus
 }
 #endif
