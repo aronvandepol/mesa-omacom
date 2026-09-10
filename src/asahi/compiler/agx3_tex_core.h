@@ -112,6 +112,7 @@ struct agx3_tex_sample_desc {
    bool coord_kill;
    bool final;          /* witnessed final texture-op marker */
    bool retain_helpers; /* AGX3B: keep helper coordinates for later samples */
+   bool shadow;         /* M4: scalar depth compare, reference in staging half4 */
    bool array;          /* 2D array: register layer already in operand bank 6 */
    bool cube;           /* M4 projected UV plus packed face in operand bank 6 */
    enum agx3_tex_operand_kind texture_kind;
