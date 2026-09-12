@@ -51,6 +51,17 @@ bool agx3_tile_load(enum agx_isa_encoding enc, uint16_t dest,
                     uint16_t wait_mask, bool first, bool last,
                     uint8_t out[AGX3_TILE_MAX_LENGTH], uint8_t *len);
 
+/* G16 immediate sample masks, witnessed by native 4x framebuffer fetch.
+ * The legacy entry points retain their single-sample mask of one. */
+bool agx3_tile_store_mask(enum agx_isa_encoding enc, uint16_t data,
+                         enum agx3_tile_width width, uint8_t chan_mask,
+                         uint16_t tile_off, uint8_t sample_mask,
+                         uint16_t wait_mask, uint8_t out[AGX3_TILE_MAX_LENGTH], uint8_t *len);
+bool agx3_tile_load_mask(enum agx_isa_encoding enc, uint16_t dest,
+                        enum agx3_tile_width width, uint8_t slot, uint8_t chan_mask,
+                        uint16_t tile_off, uint8_t sample_mask, uint16_t wait_mask,
+                        bool first, bool last, uint8_t out[AGX3_TILE_MAX_LENGTH], uint8_t *len);
+
 #ifdef __cplusplus
 }
 #endif
