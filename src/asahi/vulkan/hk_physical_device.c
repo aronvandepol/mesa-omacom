@@ -707,7 +707,6 @@ hk_get_device_features(
       features->sparseResidencyImage2D = false;
       features->sparseResidencyBuffer = false;
       features->multiview = false;
-      features->transformFeedback = false;
       features->geometryStreams = false;
       /* */
       features->robustImageAccess = false;
