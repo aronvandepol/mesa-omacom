@@ -940,10 +940,10 @@ agx3_emit_storage_image_write(struct util_dynarray *emission,
         !((I->src[4].value == 0 && I->format == AGX_FORMAT_I8) ||
           (I->src[4].value == 1 && normalized))))) {
       if (agx_compiler_debug & AGX_DBG_SHADERS)
-         fprintf(stderr, "G17P imgwci shape refusal: wait=0x%x data=%u/%u/%u coord=%u/%u/%u dim=%u coherent=%u\n",
+         fprintf(stderr, "G17P imgwci shape refusal: wait=0x%x data=%u/%u/%u coord=%u/%u/%u dim=%u coherent=%u format=%u direct=%u\n",
                  wait_mask, I->src[0].value, I->src[0].size,
                  agx_channels(I->src[0]), I->src[1].value, I->src[1].size,
-                 agx_channels(I->src[1]), I->dim, I->coherent);
+                 agx_channels(I->src[1]), I->dim, I->coherent, I->format, direct);
       return false;
    }
 
@@ -1287,7 +1287,11 @@ agx3_emit_tile(struct util_dynarray *emission, enum agx_isa_encoding enc,
    return ok && agx3_append(emission, bytes, length);
 }
 
-/* */
+/* Native coverage updates use SAMPLE_MASK_AGX3. Depth-only writes use
+ * ZS_EMIT_AGX3 with float staging and a separate coverage word. Stencil
+ * exports and writes inside the external sample-shading loop remain on the
+ * refused AGX2 ZS_EMIT path until their native data protocol is implemented.
+ */
 
 /*
  * `fltnorm`: pack two 32-bit floats, clamped and scaled, into the two halves
@@ -3896,7 +3900,8 @@ agx3_pack_binary(agx_context *ctx, struct util_dynarray *emission)
             tile_loads_left++;
          if (scan_I->op == AGX_OPCODE_ST_TILE)
             tile_stores_left++;
-         if (scan_I->op == AGX_OPCODE_SAMPLE_MASK_AGX3)
+         if (scan_I->op == AGX_OPCODE_SAMPLE_MASK_AGX3 ||
+             scan_I->op == AGX_OPCODE_ZS_EMIT_AGX3)
             has_coverage_write = true;
          if (scan_I->op == AGX_OPCODE_DEVICE_LOAD)
             device_loads_left++;
@@ -3962,7 +3967,8 @@ agx3_pack_binary(agx_context *ctx, struct util_dynarray *emission)
                                   g17p_deferred_write != NULL);
    ctx->agx3_colour_link.straight_line = list_length(&ctx->blocks) == 1;
    agx_foreach_instr_global(ctx, entry_I) {
-      if (agx3_is_cf_op(entry_I) || entry_I->op == AGX_OPCODE_SAMPLE_MASK_AGX3)
+      if (agx3_is_cf_op(entry_I) || entry_I->op == AGX_OPCODE_SAMPLE_MASK_AGX3 ||
+          entry_I->op == AGX_OPCODE_ZS_EMIT_AGX3)
          ctx->agx3_colour_link.straight_line = false;
    }
    unsigned g17p_link_packs_seen = 0;
@@ -4679,6 +4685,56 @@ agx3_pack_binary(agx_context *ctx, struct util_dynarray *emission)
                 !agx3_append(emission, bytes, len))
                AGX3_REFUSE(I);
             interpolation_started = true;
+            continue;
+         }
+
+         if (I->op == AGX_OPCODE_ZS_EMIT_AGX3) {
+            if (enc != AGX_ISA_ENCODING_AGX3B || ctx->stage != MESA_SHADER_FRAGMENT ||
+                I->nr_dests || I->nr_srcs != 2 ||
+                !agx3_vary_reg32(I->src[0]) || agx_channels(I->src[0]) != 1 ||
+                !agx3_vary_reg32(I->src[1]) || agx_channels(I->src[1]) != 1)
+               AGX3_REFUSE(I);
+            uint8_t bytes[AGX3_ALU_MAX_LENGTH], len;
+            if (!agx3_retire_slots_noop(emission, enc, wait | outstanding_here))
+               AGX3_REFUSE(I);
+            if (!g17p_colour_open) {
+               if (!agx3_pixel_colour_entry(enc, bytes, &len) ||
+                   !agx3_append(emission, bytes, len))
+                  AGX3_REFUSE(I);
+               ctx->agx3_colour_link.entry_emitted = true;
+               ctx->agx3_colour_link.entry_offset = emission->size - len - initial_size;
+               g17p_colour_open = true;
+            }
+            /* Match native DEPTHF's ALU staging producer and publication
+             * flags, then publish coverage. Both selected operands are the
+             * original float, preserving the NaN used for forced NEVER. */
+            const uint16_t depth = I->src[1].value;
+            const struct agx3_field_kv fields[] = {
+               {10,5}, {11,2}, {6,2}, {13,1}, {14,1},
+               {42,2}, {43,2}, {35,depth},
+               {59,2}, {60,2}, {52,depth},
+               {76,2}, {77,2}, {69,depth},
+               {93,2}, {94,2}, {86,depth}, {110,2},
+            };
+            if (!agx3_bind_compose(enc, "fsel", 35, fields, ARRAY_SIZE(fields),
+                                    NULL, 0, bytes, &len) ||
+                !agx3_append(emission, bytes, len) ||
+                !agx3_stage_copy_flags(enc, 0, I->src[0].value,
+                                        I->src[0].discard, true, 1, 0, bytes, &len) ||
+                !agx3_append(emission, bytes, len))
+               AGX3_REFUSE(I);
+            const struct agx3_zs_desc zs = {
+               .value = 0, .value_kill = true, .slot = 1, .wait_mask = 1,
+            };
+            if (!agx3_pixel_wait(enc, 1, 0, bytes, &len) ||
+                !agx3_append(emission, bytes, len) ||
+                !agx3_zs_encode_depth_stencil(enc, &zs, true, false, bytes, &len) ||
+                !agx3_append(emission, bytes, len) ||
+                !agx3_pixel_release(enc, 1, false, 0, bytes, &len) ||
+                !agx3_append(emission, bytes, len))
+               AGX3_REFUSE(I);
+            outstanding = 0;
+            ctx->agx3_staging_halfs = MAX2(ctx->agx3_staging_halfs, 4);
             continue;
          }
 
