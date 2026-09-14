@@ -707,7 +707,8 @@ hk_get_device_features(
       features->sparseResidencyAliased = false;
       features->sparseResidencyImage2D = false;
       features->sparseResidencyBuffer = false;
-      features->multiview = false;
+      // G16G exports the view index through its qualified layered UVS path.
+      features->multiview = dev->chip == AGX_CHIP_G16G;
       features->geometryStreams = false;
       /* */
       features->robustImageAccess = false;
