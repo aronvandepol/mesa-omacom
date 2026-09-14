@@ -711,7 +711,7 @@ hk_get_device_features(
       features->multiview = dev->chip == AGX_CHIP_G16G;
       features->geometryStreams = false;
       /* */
-      features->robustImageAccess = false;
+      features->robustImageAccess = dev->chip == AGX_CHIP_G16G;
       features->robustImageAccess2 = false;
    }
 }
