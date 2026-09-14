@@ -5504,7 +5504,9 @@ agx3_sink_vertex_outputs(agx_context *ctx)
        ctx->key->secondary)
       return false;
 
-   /* Outputs already belonging to the final block can be bundled locally
+   /* An earlier STOP terminates only that path and does not observe exports
+    * in the final block. Keep it in place, just like other control flow.
+    * Outputs already belonging to the final block can be bundled locally
     * even when earlier blocks contain instance transforms. Never move an
     * output across a branch or change its execution mask. */
    agx_block *output_block = NULL;
@@ -5516,7 +5518,7 @@ agx3_sink_vertex_outputs(agx_context *ctx)
       if (block == output_block)
          break;
       agx_foreach_instr_in_block(block, I) {
-         if (I->op == AGX_OPCODE_ST_VARY || I->op == AGX_OPCODE_STOP)
+         if (I->op == AGX_OPCODE_ST_VARY)
             return false;
       }
    }
