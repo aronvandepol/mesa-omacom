@@ -694,9 +694,7 @@ hk_get_device_features(
    };
 
    if (agx_chip_uses_hal200_ioto(dev->chip)) {
-      /* G16G has qualified generated geometry draws, vertex scratch/stores
-       * and fragment helper coverage/atomics. Retain the other HAL200 chip's
-       * feature boundary until it is independently qualified. */
+      /* */
       const bool graphics_storage = dev->chip == AGX_CHIP_G16G;
       features->geometryShader = graphics_storage;
       features->tessellationShader = graphics_storage;
@@ -706,7 +704,8 @@ hk_get_device_features(
        * query_pool.statistics_query, 2026-09-16). */
       features->pipelineStatisticsQuery = dev->chip == AGX_CHIP_G16G;
       features->vertexPipelineStoresAndAtomics = graphics_storage;
-      features->fragmentStoresAndAtomics = graphics_storage;
+      features->fragmentStoresAndAtomics =
+         agx_chip_uses_g15_g16_shader_abi(dev->chip);
       features->shaderTessellationAndGeometryPointSize =
          dev->chip == AGX_CHIP_G16G;
       const bool sparse = dev->chip == AGX_CHIP_G16G;
