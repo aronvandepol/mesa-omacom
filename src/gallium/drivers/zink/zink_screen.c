@@ -3142,11 +3142,6 @@ init_driver_workarounds(struct zink_screen *screen)
    case VK_DRIVER_ID_MESA_LLVMPIPE:
    case VK_DRIVER_ID_MESA_TURNIP:
    case VK_DRIVER_ID_MESA_PANVK:
-   case VK_DRIVER_ID_MESA_HONEYKRISP:
-      /* */
-      if (screen->info.props.deviceID == 0x6030)
-         screen->driver_workarounds.implicit_sync = false;
-      break;
    case VK_DRIVER_ID_MESA_V3DV:
    case VK_DRIVER_ID_IMAGINATION_PROPRIETARY:
    case VK_DRIVER_ID_QUALCOMM_PROPRIETARY:
