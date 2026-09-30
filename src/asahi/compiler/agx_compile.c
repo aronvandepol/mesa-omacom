@@ -6898,9 +6898,7 @@ lower_prefetched_uniform(nir_builder *b, nir_intrinsic_instr *intr, void *data)
    if (intr->intrinsic != nir_intrinsic_load_prefetched_agx)
       return false;
 
-   b->cursor = nir_before_instr(&intr->instr);
-   nir_def_replace(&intr->def, nir_load_preamble(b, 1, 32,
-                                               .base = nir_intrinsic_base(intr)));
+   nir_def_replace(&intr->def, intr->src[1].ssa);
    return true;
 }
 
