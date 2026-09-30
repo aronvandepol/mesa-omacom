@@ -335,6 +335,9 @@ struct agx_shader_key {
     */
    bool no_preamble;
 
+   /* */
+   bool native_vertex_uniform_cse;
+
    /* Set if this is a non-monolithic shader that must be linked with additional
     * shader parts before the program can be used. This suppresses omission of
     * `stop` instructions, which the linker must insert instead.
