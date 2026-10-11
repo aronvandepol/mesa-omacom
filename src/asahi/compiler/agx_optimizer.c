@@ -125,6 +125,7 @@ agx_optimizer_fmov(agx_context *ctx, agx_instr **defs, agx_instr *ins)
        * mixed-width operation. */
       if (ctx->key && ctx->key->dev.encoding == AGX_ISA_ENCODING_AGX3B &&
           (ins->op == AGX_OPCODE_FADD ||
+           ins->op == AGX_OPCODE_FLTNORM_AGX3 ||
            (ins->op == AGX_OPCODE_FFMA &&
             (ins->dest[0].size != AGX_SIZE_32 || ins->saturate)) ||
            ins->op == AGX_OPCODE_DFDX || ins->op == AGX_OPCODE_DFDY ||
