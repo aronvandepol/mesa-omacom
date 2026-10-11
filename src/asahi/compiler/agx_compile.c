@@ -1088,7 +1088,8 @@ agx_unpack_normalized_agx3(agx_builder *b, agx_index dest,
    }
    if (format != AGX_FORMAT_U8NORM && format != AGX_FORMAT_S8NORM)
       return false;
-   if (nr_comps < 1 || nr_comps > 4 || dest.size != AGX_SIZE_32)
+   if (nr_comps < 1 || nr_comps > 4 ||
+       (dest.size != AGX_SIZE_32 && dest.size != AGX_SIZE_16))
       return false;
 
    const unsigned nr_packed = DIV_ROUND_UP(nr_comps, 2);
@@ -1101,23 +1102,10 @@ agx_unpack_normalized_agx3(agx_builder *b, agx_index dest,
    agx_index halves[4] = {agx_null()};
    agx_emit_split(b, halves, packed, nr_packed);
 
-   agx_index channels[4] = {agx_null()};
-   for (unsigned i = 0; i < nr_packed; ++i) {
-      /* One unpack per packed register; each yields a 32-bit pair, which the
-       * split below turns back into the two scalar channels. */
-      agx_index pair = agx_temp(b->shader, AGX_SIZE_32);
-      const unsigned lanes = MIN2(2u, nr_comps - i * 2);
-      pair.channels_m1 = lanes - 1;
-      agx_normflt_agx3_to(b, pair, halves[i], format);
-
-      agx_index unpacked[2] = {agx_null()};
-      agx_emit_split(b, unpacked, pair, lanes);
-      for (unsigned c = 0; c < lanes; ++c)
-         channels[i * 2 + c] = unpacked[c];
-   }
-
-   agx_emit_collect_to(b, dest, nr_comps, channels);
-   agx_emit_cached_split(b, dest, nr_comps);
+   /* Tile loads transfer packed bytes. Convert to full-width floats before
+    * narrowing mediump destinations through the shared unpack path. */
+   agx_unpack_normalized_halves_agx3(b, dest, halves, format, nr_comps,
+                                    BITFIELD_MASK(nr_comps), true);
    return true;
 }
 
