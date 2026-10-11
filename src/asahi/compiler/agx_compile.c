@@ -819,11 +819,20 @@ agx_pack_normalized_agx3(agx_builder *b, const agx_index *channels,
    if (nr_channels < 1 || nr_channels > 4)
       return 0;
 
-   /* Every fltnorm witness takes 32-bit float sources. */
+   /* Normalized stores take 32-bit floats. GLES mediump outputs arrive as
+    * half floats, so widen them before packing the normalized bytes. */
+   agx_index widened[4];
    for (unsigned i = 0; i < nr_channels; ++i) {
-      if (channels[i].size != AGX_SIZE_32)
+      widened[i] = channels[i];
+      if (channels[i].size == AGX_SIZE_16 &&
+          b->shader->key->dev.encoding == AGX_ISA_ENCODING_AGX3B) {
+         widened[i] = agx_temp(b->shader, AGX_SIZE_32);
+         agx_fmov_to(b, widened[i], channels[i]);
+      }
+      if (widened[i].size != AGX_SIZE_32)
          return 0;
    }
+   channels = widened;
 
    unsigned n = 0;
    for (unsigned i = 0; i < nr_channels; i += 2) {
