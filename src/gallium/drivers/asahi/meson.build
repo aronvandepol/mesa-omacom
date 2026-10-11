@@ -185,4 +185,21 @@ if with_tools.contains('drm-shim')
     ],
     build_by_default : false,
   )
+  asahi_native_mediump_opt_test = executable(
+    'asahi-native-mediump-opt',
+    files('tests/test-agx-native-mediump-opt.c'),
+    include_directories : [
+      inc_gallium_aux, inc_gallium, inc_include, inc_src, inc_asahi,
+      inc_virtio_gpu, inc_virtio_vdrm,
+    ],
+    dependencies : [
+      idep_nir, idep_mesautil, idep_agx_pack, dep_libdrm, idep_libagx,
+      idep_libagx_shaders_h, idep_xmlconfig,
+    ],
+    link_with : [
+      libasahi, libasahiwinsys, libasahi_compiler, libasahi_lib,
+      libasahi_layout, libasahi_decode, libgallium, libgalliumvl_stub,
+    ],
+    build_by_default : false,
+  )
 endif
