@@ -325,6 +325,15 @@ hk_can_compress(const struct agx_device *dev, VkFormat format, unsigned plane,
    const bool m3_split_depth_compression = hk_g15s_split_depth_plane(
       dev->chip, dev->params.gpu_hal_generation, format, plane, samples,
       debug_get_bool_option("HK_M3_COMPRESSED_SPLIT_DEPTH", false));
+   /* Restrict this color experiment to legacy G15S single-sample RGBA16F
+    * attachments. The shared usage and layout checks still apply. */
+   const bool m3_rgba16f_compression =
+      dev->chip == AGX_CHIP_G15S && dev->params.gpu_hal_generation == 0 &&
+      debug_get_bool_option("HK_M3_COMPRESSED_RGBA16F", false) &&
+      samples == 1 && plane == 0 &&
+      format == VK_FORMAT_R16G16B16A16_SFLOAT &&
+      (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) &&
+      !(flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT);
    const struct vk_format_ycbcr_info *ycbcr_info =
       vk_format_get_ycbcr_info(format);
 
@@ -346,6 +355,7 @@ hk_can_compress(const struct agx_device *dev, VkFormat format, unsigned plane,
    if (hk_descriptor_generation_is_agx3(
           agx_chip_descriptor_generation(dev->chip)) &&
        !m3_depth_compression && !m3_split_depth_compression &&
+       !m3_rgba16f_compression &&
        !(agx_chip_uses_g15_g16_shader_abi(dev->chip) &&
          debug_get_bool_option("HK_M4_COMPRESSED_2D", false) && samples == 1 &&
          (format == VK_FORMAT_R8G8B8A8_UNORM ||
@@ -885,6 +895,14 @@ static bool
 hk_can_compress_create_info(struct hk_device *dev, unsigned plane,
                             const VkImageCreateInfo *info)
 {
+   /* RGBA16F compression remains limited to one ordinary 2D level/layer,
+    * independently of the wider experimental mipmap option. */
+   if (dev->dev.chip == AGX_CHIP_G15S &&
+       info->format == VK_FORMAT_R16G16B16A16_SFLOAT &&
+       (info->imageType != VK_IMAGE_TYPE_2D || info->mipLevels != 1 ||
+        info->arrayLayers != 1))
+      return false;
+
    if (dev->dev.chip == AGX_CHIP_G15S &&
        info->format == VK_FORMAT_D32_SFLOAT_S8_UINT &&
        !hk_g15s_split_depth_shape(info))
@@ -1128,6 +1146,17 @@ hk_image_init(struct hk_device *dev, struct hk_image *image,
                          VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
 
       ail_make_miptree(&image->planes[plane].layout);
+
+      if (dev->dev.chip == AGX_CHIP_G15S &&
+          pCreateInfo->format == VK_FORMAT_R16G16B16A16_SFLOAT &&
+          debug_get_bool_option("HK_M3_RGBA16F_TRACE", false)) {
+         const struct ail_layout *l = &image->planes[plane].layout;
+         fprintf(stderr, "HK_RGBA16F_ALLOC plane=%u width=%u height=%u usage=%#x samples=%u compressed=%u size=%" PRIu64 " meta_offset=%u meta_stride=%" PRIu64 " layer_stride=%" PRIu64 "\n",
+                 plane, l->width_px, l->height_px, pCreateInfo->usage,
+                 pCreateInfo->samples, l->compressed, l->size_B,
+                 l->metadata_offset_B, l->compression_layer_stride_B,
+                 l->layer_stride_B);
+      }
 
       if (dev->dev.chip == AGX_CHIP_G15S &&
           dev->dev.params.gpu_hal_generation == 0 &&
