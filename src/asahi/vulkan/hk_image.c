@@ -336,6 +336,15 @@ hk_can_compress(const struct agx_device *dev, VkFormat format, unsigned plane,
       /* Raw buffer uploads require an uncompressed destination. */
       !(usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) &&
       !(flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT);
+   /* Keep R8 color compression to single-sample legacy G15S attachments
+    * without raw uploads or mutable views. */
+   const bool m3_r8_compression =
+      dev->chip == AGX_CHIP_G15S && dev->params.gpu_hal_generation == 0 &&
+      debug_get_bool_option("HK_M3_COMPRESSED_R8", false) &&
+      samples == 1 && plane == 0 && format == VK_FORMAT_R8_UNORM &&
+      (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) &&
+      !(usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) &&
+      !(flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT);
    const struct vk_format_ycbcr_info *ycbcr_info =
       vk_format_get_ycbcr_info(format);
 
@@ -357,7 +366,7 @@ hk_can_compress(const struct agx_device *dev, VkFormat format, unsigned plane,
    if (hk_descriptor_generation_is_agx3(
           agx_chip_descriptor_generation(dev->chip)) &&
        !m3_depth_compression && !m3_split_depth_compression &&
-       !m3_rgba16f_compression &&
+       !m3_rgba16f_compression && !m3_r8_compression &&
        !(agx_chip_uses_g15_g16_shader_abi(dev->chip) &&
          debug_get_bool_option("HK_M4_COMPRESSED_2D", false) && samples == 1 &&
          (format == VK_FORMAT_R8G8B8A8_UNORM ||
@@ -906,6 +915,12 @@ hk_can_compress_create_info(struct hk_device *dev, unsigned plane,
       return false;
 
    if (dev->dev.chip == AGX_CHIP_G15S &&
+       info->format == VK_FORMAT_R8_UNORM &&
+       (info->imageType != VK_IMAGE_TYPE_2D || info->mipLevels != 1 ||
+        info->arrayLayers != 1))
+      return false;
+
+   if (dev->dev.chip == AGX_CHIP_G15S &&
        info->format == VK_FORMAT_D32_SFLOAT_S8_UINT &&
        !hk_g15s_split_depth_shape(info))
       return false;
@@ -1154,6 +1169,18 @@ hk_image_init(struct hk_device *dev, struct hk_image *image,
           debug_get_bool_option("HK_M3_RGBA16F_TRACE", false)) {
          const struct ail_layout *l = &image->planes[plane].layout;
          fprintf(stderr, "HK_RGBA16F_ALLOC plane=%u width=%u height=%u usage=%#x samples=%u compressed=%u size=%" PRIu64 " meta_offset=%u meta_stride=%" PRIu64 " layer_stride=%" PRIu64 "\n",
+                 plane, l->width_px, l->height_px, pCreateInfo->usage,
+                 pCreateInfo->samples, l->compressed, l->size_B,
+                 l->metadata_offset_B, l->compression_layer_stride_B,
+                 l->layer_stride_B);
+      }
+
+      if (dev->dev.chip == AGX_CHIP_G15S &&
+          dev->dev.params.gpu_hal_generation == 0 &&
+          pCreateInfo->format == VK_FORMAT_R8_UNORM &&
+          debug_get_bool_option("HK_M3_R8_TRACE", false)) {
+         const struct ail_layout *l = &image->planes[plane].layout;
+         fprintf(stderr, "HK_R8_ALLOC plane=%u width=%u height=%u usage=%#x samples=%u compressed=%u size=%" PRIu64 " meta_offset=%u meta_stride=%" PRIu64 " layer_stride=%" PRIu64 "\n",
                  plane, l->width_px, l->height_px, pCreateInfo->usage,
                  pCreateInfo->samples, l->compressed, l->size_B,
                  l->metadata_offset_B, l->compression_layer_stride_B,
