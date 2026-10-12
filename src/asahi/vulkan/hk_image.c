@@ -6,6 +6,7 @@
  */
 #include "hk_image.h"
 #include "hk_native_descriptor.h"
+#include "hk_g15s_split_depth.h"
 #include "asahi/layout/layout.h"
 #include "drm-uapi/drm_fourcc.h"
 #include "util/bitscan.h"
@@ -321,6 +322,9 @@ hk_can_compress(const struct agx_device *dev, VkFormat format, unsigned plane,
       agx_chip_uses_g15s_runtime(dev->chip) &&
       debug_get_bool_option("HK_M3_COMPRESSED_DEPTH", false) && samples == 1 &&
       format == VK_FORMAT_D32_SFLOAT;
+   const bool m3_split_depth_compression = hk_g15s_split_depth_plane(
+      dev->chip, dev->params.gpu_hal_generation, format, plane, samples,
+      debug_get_bool_option("HK_M3_COMPRESSED_SPLIT_DEPTH", false));
    const struct vk_format_ycbcr_info *ycbcr_info =
       vk_format_get_ycbcr_info(format);
 
@@ -341,7 +345,7 @@ hk_can_compress(const struct agx_device *dev, VkFormat format, unsigned plane,
     * and metadata layout have been qualified. */
    if (hk_descriptor_generation_is_agx3(
           agx_chip_descriptor_generation(dev->chip)) &&
-       !m3_depth_compression &&
+       !m3_depth_compression && !m3_split_depth_compression &&
        !(agx_chip_uses_g15_g16_shader_abi(dev->chip) &&
          debug_get_bool_option("HK_M4_COMPRESSED_2D", false) && samples == 1 &&
          (format == VK_FORMAT_R8G8B8A8_UNORM ||
@@ -881,6 +885,11 @@ static bool
 hk_can_compress_create_info(struct hk_device *dev, unsigned plane,
                             const VkImageCreateInfo *info)
 {
+   if (dev->dev.chip == AGX_CHIP_G15S &&
+       info->format == VK_FORMAT_D32_SFLOAT_S8_UINT &&
+       !hk_g15s_split_depth_shape(info))
+      return false;
+
    /* The depth upload and native ZLS bindings are qualified for one level.
     * The separate experimental color-mipmap switch must not broaden this. */
    if (agx_chip_uses_g15s_runtime(dev->dev.chip) &&
@@ -1119,6 +1128,17 @@ hk_image_init(struct hk_device *dev, struct hk_image *image,
                          VK_ERROR_INVALID_DRM_FORMAT_MODIFIER_PLANE_LAYOUT_EXT);
 
       ail_make_miptree(&image->planes[plane].layout);
+
+      if (dev->dev.chip == AGX_CHIP_G15S &&
+          dev->dev.params.gpu_hal_generation == 0 &&
+          pCreateInfo->format == VK_FORMAT_D32_SFLOAT_S8_UINT &&
+          debug_get_bool_option("HK_M3_SPLIT_DEPTH_TRACE", false)) {
+         const struct ail_layout *l = &image->planes[plane].layout;
+         fprintf(stderr, "HK_SPLIT_DEPTH_ALLOC plane=%u width=%u height=%u compressed=%u size=%" PRIu64 " meta_offset=%u meta_stride=%" PRIu64 " layer_stride=%" PRIu64 "\n",
+                 plane, l->width_px, l->height_px, l->compressed, l->size_B,
+                 l->metadata_offset_B, l->compression_layer_stride_B,
+                 l->layer_stride_B);
+      }
 
       if (mod_explicit_info) {
          uint64_t offset_B = mod_explicit_info->pPlaneLayouts[plane].offset;

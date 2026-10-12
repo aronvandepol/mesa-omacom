@@ -455,6 +455,17 @@ asahi_fill_vdm_command(struct hk_device *dev, struct hk_cs *cs,
    c->stencil.comp_base = cs->cr.stencil.meta;
    c->stencil.comp_stride = cs->cr.stencil.meta_stride;
 
+   if (dev->dev.chip == AGX_CHIP_G15S &&
+       dev->dev.params.gpu_hal_generation == 0 &&
+       debug_get_bool_option("HK_M3_SPLIT_DEPTH_TRACE", false) &&
+       (c->depth.base || c->stencil.base)) {
+      fprintf(stderr, "HK_SPLIT_DEPTH_SUBMIT width=%u height=%u zbase=%" PRIx64 " zmeta=%" PRIx64 " zstride=%u zmeta_stride=%u sbase=%" PRIx64 " smeta=%" PRIx64 " sstride=%u smeta_stride=%u zls=%" PRIx64 "\n",
+              c->width_px, c->height_px, (uint64_t)c->depth.base,
+              (uint64_t)c->depth.comp_base, c->depth.stride, c->depth.comp_stride,
+              (uint64_t)c->stencil.base, (uint64_t)c->stencil.comp_base,
+              c->stencil.stride, c->stencil.comp_stride, (uint64_t)c->zls_ctrl);
+   }
+
    if (cs->cr.dbias_is_int == U_TRISTATE_YES) {
       c->flags |= DRM_ASAHI_RENDER_DBIAS_IS_INT;
    }

@@ -543,6 +543,18 @@ if with_tests
   )
 
   test(
+    'hk_g15s_split_depth',
+    executable(
+      'hk_g15s_split_depth_test',
+      files('tests/test-hk-g15s-split-depth.c'),
+      include_directories : [include_directories('.'), inc_include, inc_src, inc_asahi],
+      dependencies : [idep_vulkan_runtime_headers],
+      c_args : [c_msvc_compat_args, '-UNDEBUG'],
+      gnu_symbol_visibility : 'hidden',
+    ),
+    suite : ['asahi'],
+  )
+  test(
     'hk_memory_budget_core',
     executable(
       'hk_memory_budget_core_test',
