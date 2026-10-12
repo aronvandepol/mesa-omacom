@@ -333,6 +333,8 @@ hk_can_compress(const struct agx_device *dev, VkFormat format, unsigned plane,
       samples == 1 && plane == 0 &&
       format == VK_FORMAT_R16G16B16A16_SFLOAT &&
       (usage & VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT) &&
+      /* Raw buffer uploads require an uncompressed destination. */
+      !(usage & VK_IMAGE_USAGE_TRANSFER_DST_BIT) &&
       !(flags & VK_IMAGE_CREATE_MUTABLE_FORMAT_BIT);
    const struct vk_format_ycbcr_info *ycbcr_info =
       vk_format_get_ycbcr_info(format);
