@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 device memory operations use base64 + (index << shift) + sext16(offset).
  * The base is a uniform quad or GPR pair. Loads carry a scoreboard slot and
  * wait mask; stores do not signal a slot.

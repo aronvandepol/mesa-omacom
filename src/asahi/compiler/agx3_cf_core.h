@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 control flow. Compare instructions write a per-lane flag slot.
  * Execution-mask operations consume flag[slot] XOR invert; branches carry
  * signed byte displacements patched after block layout.

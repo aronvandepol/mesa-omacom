@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 tile operations: st_tile maps to lstcol and ld_tile to lldcol.
  * Single-sample and G16 immediate sample masks are supported here; register
  * sample masks use a separate interface. Blend and depth comparison are state.

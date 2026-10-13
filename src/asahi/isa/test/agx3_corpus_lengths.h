@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3b and AGX3c instruction length fixtures. Instructions are zero-padded
  * to the maximum 24-byte length.
  */

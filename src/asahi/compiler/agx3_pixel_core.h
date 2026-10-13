@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 tile writeout barriers map wait_pix to pixwait and signal_pix to
  * pixrel. The writeout masks select depth/coverage or color classes.
  * Unsupported masks are rejected.

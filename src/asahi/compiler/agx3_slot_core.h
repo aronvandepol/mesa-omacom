@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 scoreboard assignment. Asynchronous loads, samples, atomics and fills
  * signal slots. Consumers wait for those slots before use. A satisfied slot
  * remains satisfied until it is reallocated; ALU dependencies are interlocked.

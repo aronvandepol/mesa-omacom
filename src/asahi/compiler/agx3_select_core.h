@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 instruction selection maps normalized IR operands to encoder fields.
  * Unsupported operations, operand sizes and modifiers are rejected rather
  * than emitted with an incompatible encoding.
