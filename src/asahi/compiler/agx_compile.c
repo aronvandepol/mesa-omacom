@@ -1227,6 +1227,30 @@ agx_emit_load(agx_builder *b, agx_index dest, nir_intrinsic_instr *instr)
       return;
    }
 
+   if (b->shader->key->dev.encoding == AGX_ISA_ENCODING_AGX3B &&
+       fmt == AGX_FORMAT_I16 && dest.size == AGX_SIZE_32 && !packed_count) {
+      /* Native device loads keep consecutive 16-bit lanes packed. Widen
+       * each lane explicitly when NIR requests 32-bit unsigned values.
+       * A word-wide split would combine adjacent vertex attributes. */
+      const unsigned nr = instr->def.num_components;
+      assert(nr >= 1 && nr <= 4);
+      agx_index packed = agx_vec_temp(b->shader, AGX_SIZE_16, nr);
+      agx_instr *load = agx_device_load_to(
+         b, packed, addr, offset, fmt, BITFIELD_MASK(nr), shift,
+         nir_is_coherent(instr));
+      load->memory_index_is_bytes = index_bytes;
+
+      agx_index halves[4] = {agx_null()}, words[4] = {agx_null()};
+      agx_emit_split(b, halves, packed, nr);
+      for (unsigned i = 0; i < nr; ++i) {
+         words[i] = agx_temp(b->shader, AGX_SIZE_32);
+         agx_mov_to(b, words[i], halves[i]);
+      }
+      agx_emit_collect_to(b, dest, nr, words);
+      agx_emit_cached_split(b, dest, nr);
+      return;
+   }
+
    /* AGX3 memory traffic is raw. Convert a normalized packed texel with
     * the same native instruction used by tile loads, after its real load. */
    if (b->shader->key->dev.encoding == AGX_ISA_ENCODING_AGX3B &&

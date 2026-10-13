@@ -168,6 +168,12 @@ if with_tests and with_tools.contains('drm-shim')
 endif
 
 if with_tools.contains('drm-shim')
+  asahi_native_integer_attrib_test = executable(
+    'asahi-native-integer-attrib',
+    files('tests/test-agx-native-integer-attrib.c'),
+    dependencies : [cc.find_library('EGL'), cc.find_library('GLESv2')],
+    build_by_default : false,
+  )
   asahi_native_mrt_clear_test = executable(
     'asahi-native-mrt-clear',
     files('tests/test-agx-native-mrt-clear.c'),
