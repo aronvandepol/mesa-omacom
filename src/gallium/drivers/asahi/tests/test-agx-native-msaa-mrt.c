@@ -19,7 +19,7 @@
    } while (0)
 
 static unsigned
-check_target(GLuint source, GLuint resolved, unsigned rt, bool partial)
+check_target(GLuint source, GLuint resolved, unsigned rt, unsigned phase)
 {
    glBindFramebuffer(GL_READ_FRAMEBUFFER, source);
    glReadBuffer(GL_COLOR_ATTACHMENT0 + rt);
@@ -32,22 +32,34 @@ check_target(GLuint source, GLuint resolved, unsigned rt, bool partial)
    unsigned bad = 0;
    for (unsigned y = 0; y < H; ++y) {
       for (unsigned x = 0; x < W; ++x) {
-         const bool blue = partial && rt == 0 && x < W / 2;
-         const unsigned char expected[4] = {
+         const bool blue = phase == 1 && rt == 0 && x < W / 2;
+         unsigned char expected[4] = {
             rt == 0 && !blue ? 255 : 0,
             rt == 1 ? 255 : 0,
             blue ? 255 : 0,
             255,
          };
+         if (phase == 2) {
+            expected[0] = 128;
+            expected[1] = rt ? 128 : 0;
+            expected[2] = rt ? 0 : 128;
+         } else if (phase == 3) {
+            expected[0] = rt ? 128 : 0;
+            expected[1] = rt ? 0 : 128;
+            expected[2] = 128;
+         }
+         const unsigned tolerance = phase >= 2 ? 1 : 0;
          bool different = false;
          for (unsigned c = 0; c < 4; ++c)
-            different |= pixels[(y * W + x) * 4 + c] != expected[c];
+            different |=
+               abs((int)pixels[(y * W + x) * 4 + c] - expected[c]) > tolerance;
          bad += different;
       }
    }
    const GLenum error = glGetError();
-   printf("case=%s rt=%u bad=%u GL=%x\n",
-          partial ? "reload-partial-clear" : "clear-store", rt, bad, error);
+   const char *names[] = {"clear-store", "reload-partial-clear",
+                          "flush-half-samples", "reload-complementary-samples"};
+   printf("case=%s rt=%u bad=%u GL=%x\n", names[phase], rt, bad, error);
    return bad != 0 || error != GL_NO_ERROR;
 }
 
@@ -79,8 +91,16 @@ main(int argc, char **argv)
    glGenRenderbuffers(2, rb);
    for (unsigned i = 0; i < 2; ++i) {
       glBindRenderbuffer(GL_RENDERBUFFER, rb[i]);
-      glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8, W,
-                                       H);
+      if (samples == 1)
+         glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, W, H);
+      else
+         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8, W,
+                                          H);
+      GLint actual_samples;
+      glGetRenderbufferParameteriv(GL_RENDERBUFFER, GL_RENDERBUFFER_SAMPLES,
+                                   &actual_samples);
+      CHECK(actual_samples == (samples == 1 ? 0 : (int)samples));
+      printf("rt=%u storage_samples=%d\n", i, actual_samples);
       glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
                                 GL_RENDERBUFFER, rb[i]);
    }
@@ -105,8 +125,8 @@ main(int argc, char **argv)
                           GL_TEXTURE_2D, texture, 0);
    CHECK(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) ==
          GL_FRAMEBUFFER_COMPLETE);
-   unsigned failures = check_target(source, resolved, 0, false) +
-                       check_target(source, resolved, 1, false);
+   unsigned failures = check_target(source, resolved, 0, 0) +
+                       check_target(source, resolved, 1, 0);
 
    /* Resolving an attachment must retain its samples. Reload both targets and
     * clear only half of RT0, preserving RT1 and the other half of RT0. */
@@ -119,8 +139,60 @@ main(int argc, char **argv)
    CHECK(glGetError() == GL_NO_ERROR);
    glFinish();
    CHECK(glGetError() == GL_NO_ERROR);
-   failures += check_target(source, resolved, 0, true) +
-               check_target(source, resolved, 1, true);
+   failures += check_target(source, resolved, 0, 1) +
+               check_target(source, resolved, 1, 1);
+   if (samples > 1) {
+      const char *vs =
+         "#version 300 es\nvoid main(){gl_Position=vec4("
+         "(gl_VertexID==1?3.:-1.),(gl_VertexID==2?3.:-1.),0.,1.);}";
+      const char *fs =
+         "#version 300 es\nprecision highp float;"
+         "uniform vec4 tint0,tint1;layout(location=0) out vec4 c0;"
+         "layout(location=1) out vec4 c1;void main(){c0=tint0;c1=tint1;}";
+      GLuint v = glCreateShader(GL_VERTEX_SHADER);
+      GLuint f = glCreateShader(GL_FRAGMENT_SHADER);
+      glShaderSource(v, 1, &vs, NULL);
+      glCompileShader(v);
+      glShaderSource(f, 1, &fs, NULL);
+      glCompileShader(f);
+      GLuint program = glCreateProgram();
+      glAttachShader(program, v);
+      glAttachShader(program, f);
+      glLinkProgram(program);
+      GLint linked;
+      glGetProgramiv(program, GL_LINK_STATUS, &linked);
+      CHECK(linked);
+      glUseProgram(program);
+      GLint tint0 = glGetUniformLocation(program, "tint0");
+      GLint tint1 = glGetUniformLocation(program, "tint1");
+      CHECK(tint0 >= 0 && tint1 >= 0);
+      glBindFramebuffer(GL_FRAMEBUFFER, source);
+      glClearBufferfv(GL_COLOR, 0, red);
+      glClearBufferfv(GL_COLOR, 1, green);
+      glViewport(0, 0, W, H);
+      glEnable(GL_SAMPLE_COVERAGE);
+      glSampleCoverage(0.5, GL_FALSE);
+      glUniform4f(tint0, 0, 0, 1, 1);
+      glUniform4f(tint1, 1, 0, 0, 1);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
+      glFinish();
+      CHECK(glGetError() == GL_NO_ERROR);
+      failures += check_target(source, resolved, 0, 2) +
+                  check_target(source, resolved, 1, 2);
+
+      /* The next draw changes only the complementary samples after a flush
+       * and resolve. Averaged reloads would lose the original sample colors. */
+      glBindFramebuffer(GL_FRAMEBUFFER, source);
+      glSampleCoverage(0.5, GL_TRUE);
+      glUniform4f(tint0, 0, 1, 0, 1);
+      glUniform4f(tint1, 0, 0, 1, 1);
+      glDrawArrays(GL_TRIANGLES, 0, 3);
+      glFinish();
+      CHECK(glGetError() == GL_NO_ERROR);
+      glDisable(GL_SAMPLE_COVERAGE);
+      failures += check_target(source, resolved, 0, 3) +
+                  check_target(source, resolved, 1, 3);
+   }
    printf("samples=%u failures=%u\n", samples, failures);
    return failures ? 1 : 0;
 }
