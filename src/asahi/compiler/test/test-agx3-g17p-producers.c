@@ -76,7 +76,7 @@ static const struct clr_v clr_vs[] = {
    {"c_zero clr r2",         "1b000000", 2, 0, false},
    {"c_zero clr r4",         "2b000000", 4, 0, false},
    {"c_zero clr r6",         "3b000000", 6, 0, false},
-   
+
 };
 
 static void

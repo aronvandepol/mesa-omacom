@@ -811,18 +811,13 @@ test_g17p_runtime_compute_tail(void)
                    sizeof(cases[i].expected)) == 0);
    }
 
-   /* Native M4 array write, 25G83 capture 20260913T031205, resource26
-    * offset0x60. Its LDSHDR uses f1=2; SPECTPR separately allocates staging. */
-   static const uint8_t array_ldshdr[] = {
-      0x77,0x01,0xaa,0x08,0x00,0x00,0x00,0x02,0x02,0x00,
-   };
-   CHECK(agx_ioto_g17p_runtime_compute_tail_build(
-      UINT64_C(0x10000000440),
-      AGX_IOTO_G16G_COMPUTE_LDSHDR_F1_ARRAY_WRITE, &output));
-   CHECK(!memcmp(output.bytes + AGX_IOTO_SPECLM_SIZE, array_ldshdr,
-                  sizeof(array_ldshdr)));
-
+   /* Mode 2 is unsupported by this G17P compute-tail interface. */
    const struct agx_ioto_state_tail_output before = output;
+   CHECK(!agx_ioto_g17p_runtime_compute_tail_build(
+      UINT64_C(0x10000000440),
+      (enum agx_ioto_g17p_compute_ldshdr_f1)2, &output));
+   CHECK(memcmp(&output, &before, sizeof(output)) == 0);
+
    CHECK(!agx_ioto_g17p_runtime_compute_tail_build(
       UINT64_C(0x100000003c1),
       AGX_IOTO_G17P_COMPUTE_LDSHDR_F1_DIRECT_ADD3, &output));

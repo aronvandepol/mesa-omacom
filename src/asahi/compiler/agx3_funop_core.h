@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 transcendental and rounding instructions. The f43 rounding mode is
  * 0=rint, 1=trunc, 2=ceil, 3=floor. AGX3c supports native saturation; AGX3b
  * rejects saturating forms. Operands are dest=f2, src=f18, abs=f30, neg=f31.

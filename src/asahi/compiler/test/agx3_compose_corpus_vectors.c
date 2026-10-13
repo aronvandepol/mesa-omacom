@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3b and AGX3c instruction field vectors and expected encodings.
  * The table-driven encoder must reproduce the bytes exactly.
  */

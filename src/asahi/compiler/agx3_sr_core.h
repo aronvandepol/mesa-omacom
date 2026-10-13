@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 special-register reads are asynchronous producers. f12 is the slot,
  * f21 the register number, and f10/f24 the width. The compact four-byte form
  * cannot carry waits or a wide destination; those use the eight-byte form.

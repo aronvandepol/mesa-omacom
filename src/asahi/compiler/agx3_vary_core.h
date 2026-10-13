@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 interpolation: iter maps to f32interp, ldcf to ldcfr, and st_vary
  * to uvsw. Perspective interpolation uses RHW interpolation, reciprocal and
  * multiplication. Center and centroid locations are explicit.

@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 f32 source and output modifiers. Compact forms handle unmodified
  * operations; long forms carry independent abs/neg bits and result saturation.
  * ADD may commute both operands and their lifetime hints.

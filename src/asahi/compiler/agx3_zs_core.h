@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * AGX3 coverage and depth/stencil output use one staged register operand.
  * f5 names its half-register index, f13 marks last use, and f12 selects the
  * scoreboard slot. f17 onward holds waits. depthf f25/f26 enable depth/stencil;

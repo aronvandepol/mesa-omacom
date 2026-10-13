@@ -577,7 +577,7 @@ test_g17p_fragment_no_resource_program(void)
    memset(output, 0xa5, sizeof(output));
    size_t written = SIZE_MAX;
    CHECK(agx_ioto_g17p_fragment_no_resource_program_compose(
-      UINT64_C(0x10000130640), &tail, output, sizeof(expected), &written));
+      UINT64_C(0x10000130640), &tail, 1, output, sizeof(expected), &written));
    CHECK(written == sizeof(expected));
    CHECK(memcmp(output, expected, sizeof(expected)) == 0);
    CHECK(output[sizeof(expected)] == 0xa5);
@@ -586,10 +586,10 @@ test_g17p_fragment_no_resource_program(void)
    memcpy(before, output, sizeof(output));
    written = 37;
    CHECK(!agx_ioto_g17p_fragment_no_resource_program_compose(
-      UINT64_C(0x10000130641), &tail, output, sizeof(expected), &written));
+      UINT64_C(0x10000130641), &tail, 1, output, sizeof(expected), &written));
    CHECK(memcmp(output, before, sizeof(output)) == 0 && written == 37);
    CHECK(!agx_ioto_g17p_fragment_no_resource_program_compose(
-      UINT64_C(0x10000130640), &tail, output, sizeof(expected) - 1,
+      UINT64_C(0x10000130640), &tail, 1, output, sizeof(expected) - 1,
       &written));
    CHECK(memcmp(output, before, sizeof(output)) == 0 && written == 37);
    return 0;
@@ -725,7 +725,7 @@ test_g17p_fragment_resource_program(void)
    size_t written = 0;
    CHECK(agx_ioto_g17p_fragment_resource_program_compose(
       UINT64_C(0x10000130640), pre_copy, sizeof(pre_copy), copies,
-      sizeof(copies), &tail, output, sizeof(expected), &written));
+      sizeof(copies), &tail, 1, output, sizeof(expected), &written));
    CHECK(written == sizeof(expected));
    CHECK(memcmp(output, expected, sizeof(expected)) == 0);
    CHECK(output[sizeof(expected)] == 0xa5);

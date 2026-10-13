@@ -334,14 +334,25 @@ test_generated_copy_boundaries(void)
          CHECK(agx_ioto_state_tail_pack(chips[c], &desc.tail, &tail));
          for (unsigned mode = 0; mode < 3; ++mode) {
             size_t a, b;
-            CHECK(agx_ioto_g17p_generated_resource_program_compose(
-               desc.program_va, body, written, copy, &tail, mode != 0, mode == 2,
-               generated, sizeof(generated), &a));
-            CHECK((mode == 0 ? agx_ioto_g17p_resource_program_compose :
-                   mode == 1 ? agx_ioto_g17p_fragment_resource_program_compose :
-                               agx_ioto_g17p_coverage_fragment_program_compose)(
-               desc.program_va, body, copy, body + copy, written - copy,
-               &tail, reference, sizeof(reference), &b));
+            if (mode == 0) {
+               CHECK(agx_ioto_g17p_resource_program_compose_trusted(
+                  desc.program_va, body, copy, body + copy, written - copy,
+                  &tail, generated, sizeof(generated), &a));
+               CHECK(agx_ioto_g17p_resource_program_compose(
+                  desc.program_va, body, copy, body + copy, written - copy,
+                  &tail, reference, sizeof(reference), &b));
+            } else {
+               CHECK((mode == 1
+                         ? agx_ioto_g17p_fragment_resource_program_compose_trusted
+                         : agx_ioto_g17p_coverage_fragment_program_compose_trusted)(
+                  desc.program_va, body, copy, body + copy, written - copy,
+                  &tail, 1, generated, sizeof(generated), &a));
+               CHECK((mode == 1
+                         ? agx_ioto_g17p_fragment_resource_program_compose
+                         : agx_ioto_g17p_coverage_fragment_program_compose)(
+                  desc.program_va, body, copy, body + copy, written - copy,
+                  &tail, 1, reference, sizeof(reference), &b));
+            }
             CHECK(a == b && !memcmp(generated, reference, a));
          }
       }

@@ -1,7 +1,7 @@
 /*
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
- * 
+ *
  * Target-gated AGX3 fragment imageblock field construction. This interface
  * does not emit Ioto records, change state tails, submit work or admit devices.
  */

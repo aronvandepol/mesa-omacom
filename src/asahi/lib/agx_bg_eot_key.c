@@ -115,4 +115,3 @@ agx_g17p_mrt_eot_selector(enum pipe_format format)
       return 0;
    }
 }
-

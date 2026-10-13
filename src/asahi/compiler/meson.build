@@ -555,6 +555,8 @@ if with_tests
     executable(
       'agx3_ioto_load_packer_test',
       files(
+        'agx3_cprog_input.c',
+        'agx3_static_spill_core.c',
         'agx3_ioto_load_packer.c',
         'agx3_mem_core.c',
         'agx3_binder.c',
@@ -577,6 +579,8 @@ if with_tests
     executable(
       'agx3_ioto_uniform_program_test',
       files(
+        'agx3_cprog_input.c',
+        'agx3_static_spill_core.c',
         'agx3_ioto_uniform_program.c',
         'agx3_ioto_load_packer.c',
         'agx3_mem_core.c',
