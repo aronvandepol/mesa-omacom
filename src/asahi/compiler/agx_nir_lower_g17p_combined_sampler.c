@@ -637,6 +637,8 @@ g17p_cube_sample_shape(const nir_tex_instr *tex)
 }
 
 /* */
+
+
 bool
 agx_nir_lower_g17p_cube_samples(nir_shader *shader, bool native_cube)
 {

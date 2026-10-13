@@ -2,6 +2,7 @@
  * Special-register read field vectors and expected encodings.
  * The driver emits unassigned hint fields as zero.
  */
+
 #include <stdint.h>
 #include <stddef.h>
 

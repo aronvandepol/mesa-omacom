@@ -107,6 +107,8 @@ bool agx3_tex_decode_fetch(enum agx_isa_encoding enc, const void *instruction,
                            struct agx3_tex_fetch_desc *out);
 
 /* */
+
+
 enum agx3_tex_lod {
    AGX3_TEX_LOD_AUTO,
    AGX3_TEX_LOD_LEVEL,

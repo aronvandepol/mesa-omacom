@@ -661,6 +661,8 @@ check_shared_atomic_compute(enum agx_isa_encoding encoding)
 }
 
 /* */
+
+
 static bool
 check_constant_data_compute(enum agx_isa_encoding encoding, bool soft_fault)
 {

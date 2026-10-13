@@ -314,6 +314,8 @@ hex_eq(const uint8_t *bytes, uint8_t len, const char *hex)
 /*
  * AGX3 filtered texture sample instruction encoding tests.
  */
+
+
 static int
 test_sample_witnesses(void)
 {

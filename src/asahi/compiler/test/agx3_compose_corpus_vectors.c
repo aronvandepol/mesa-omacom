@@ -5,6 +5,8 @@
  * AGX3b and AGX3c instruction field vectors and expected encodings.
  * The table-driven encoder must reproduce the bytes exactly.
  */
+
+
 #include "agx3_compose/agx3_compose.h"
 #include <stdint.h>
 #include <stddef.h>

@@ -73,6 +73,8 @@ agx3_select_encode(enum agx_isa_encoding encoding,
    *len = 0;
 
    /* */
+
+
    if (I->saturate)
       return false;
 

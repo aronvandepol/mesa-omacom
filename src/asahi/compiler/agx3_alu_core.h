@@ -2,6 +2,8 @@
  * Copyright 2026 Aurora Silicon
  * SPDX-License-Identifier: MIT
  */
+
+
 #pragma once
 #include <stdbool.h>
 #include <stdint.h>

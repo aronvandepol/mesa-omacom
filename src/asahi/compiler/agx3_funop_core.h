@@ -7,6 +7,8 @@
  * rejects saturating forms. Operands are dest=f2, src=f18, abs=f30, neg=f31.
  */
 
+
+
 #pragma once
 
 #include <stdbool.h>
@@ -36,6 +38,8 @@ enum agx3_funop {
 };
 
 /* */
+
+
 bool agx3_funop_encode(enum agx_isa_encoding enc, enum agx3_funop op,
                        uint16_t dest, uint16_t src, bool src_abs, bool src_neg,
                        bool saturate, uint16_t wait_mask,

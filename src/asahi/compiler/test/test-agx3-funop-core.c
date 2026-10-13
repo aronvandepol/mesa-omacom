@@ -5,6 +5,8 @@
  * AGX3 transcendental and rounding instruction encoding tests.
  */
 
+
+
 #include "agx3_funop_core.h"
 
 #include <stdio.h>
@@ -135,6 +137,7 @@ main(void)
    }
 
    /* */
+
    static const enum agx3_funop waitable[] = {
       AGX3_FUNOP_FLOOR, AGX3_FUNOP_CEIL,  AGX3_FUNOP_TRUNC,
       AGX3_FUNOP_RINT,  AGX3_FUNOP_LOG2, AGX3_FUNOP_EXP2,

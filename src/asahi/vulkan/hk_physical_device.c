@@ -725,6 +725,8 @@ hk_get_device_features(
       features->multiview = agx_chip_uses_g15_g16_shader_abi(dev->chip);
       features->geometryStreams = graphics_storage;
       /* */
+
+
       features->robustImageAccess = agx_chip_uses_g15_g16_shader_abi(dev->chip);
       features->robustImageAccess2 = agx_chip_uses_g15_g16_shader_abi(dev->chip);
    }

@@ -27,6 +27,7 @@ extern "C" {
  * buffer. G15/G16/G17P records are 12 bytes non-indexed and 32 bytes indexed.
  * HAL300 appends Unk2=7, giving 16 and 36 bytes. AGX2 is excluded.
  */
+
 #define AGX_VDM_INDEX_LIST_INDIRECT_NONINDEXED_MAX_LENGTH 16u
 #define AGX_VDM_INDEX_LIST_INDIRECT_INDEXED_MAX_LENGTH 36u
 

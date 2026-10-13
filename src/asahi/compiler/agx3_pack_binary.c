@@ -153,6 +153,8 @@ agx3_src_is_zero_imm(agx_index s)
 }
 
 /* */
+
+
 static bool
 agx3_src_is_register(agx_index s)
 {

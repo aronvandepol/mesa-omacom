@@ -7,6 +7,8 @@
  * than emitted with an incompatible encoding.
  */
 
+
+
 #pragma once
 
 #include <stdbool.h>
@@ -19,6 +21,7 @@ extern "C" {
 #endif
 
 /* */
+
 enum agx3_sel_op {
    AGX3_SEL_OP_UNSUPPORTED = 0,
    AGX3_SEL_OP_END,       /* IR stop / shader terminator */
@@ -47,6 +50,7 @@ enum agx3_sel_op {
 };
 
 /* */
+
 struct agx3_sel_src {
    uint16_t reg;
    bool is_reg;
@@ -69,6 +73,9 @@ struct agx3_sel_instr {
 };
 
 /* */
+
+
+
 #define AGX3_SEL_TT_AND 0x8u
 #define AGX3_SEL_TT_OR  0xEu
 #define AGX3_SEL_TT_XOR 0x6u
@@ -93,6 +100,8 @@ bool agx3_select_encode(enum agx_isa_encoding encoding,
                         uint8_t out[AGX3_SEL_MAX_LENGTH], uint8_t *len);
 
 /* */
+
+
 bool agx3_select_op_supported(enum agx3_sel_op op);
 
 #ifdef __cplusplus

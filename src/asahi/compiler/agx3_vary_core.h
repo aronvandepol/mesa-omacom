@@ -7,6 +7,8 @@
  * multiplication. Center and centroid locations are explicit.
  */
 
+
+
 #pragma once
 
 #include <stdbool.h>

@@ -7,6 +7,8 @@
  * sample masks use a separate interface. Blend and depth comparison are state.
  */
 
+
+
 #pragma once
 
 #include <stdbool.h>

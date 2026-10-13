@@ -274,6 +274,8 @@ assign_coefficient_regs(nir_shader *nir, struct agx_varyings_fs *var)
          continue;
 
       /* */
+
+
       assert((smooth + flat + noperspective) == 1 &&
              "slots must have consistent interpolation");
 

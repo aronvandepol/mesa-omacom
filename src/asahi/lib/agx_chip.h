@@ -12,6 +12,8 @@
  * the device and driver paths apply their own capability and ABI gates.
  */
 
+
+
 enum agx_chip {
    /* AGX2. `G` is a single-cluster part, `X` is multi-cluster. */
    AGX_CHIP_G13G,

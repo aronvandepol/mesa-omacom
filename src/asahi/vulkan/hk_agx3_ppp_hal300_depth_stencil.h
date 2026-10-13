@@ -20,6 +20,7 @@ extern "C" {
  * HAL300 depth/stencil field helpers. These do not allocate PPP storage,
  * emit VDM pointers, submit work or advertise device features.
  */
+
 bool hk_agx3_encode_ppp_hal300_depth_stencil(
    enum agx_chip chip,
    const struct agx_ppp_hal300_depth_stencil_fields *fields,

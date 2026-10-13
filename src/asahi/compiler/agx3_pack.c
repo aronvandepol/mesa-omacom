@@ -2956,6 +2956,8 @@ agx3_pack_simd_broadcast_f32_imm(
    memset(out, 0, sizeof(*out));
    if (encoding == AGX_ISA_ENCODING_AGX3B) {
       /* */
+
+
       static const uint8_t canonical[AGX3_SIMD_BROADCAST_F32_IMM_LENGTH] = {
          0x47, 0x04, 0x56, 0x00, 0x02, 0x00, 0x00, 0x2c, 0x04, 0x00,
       };

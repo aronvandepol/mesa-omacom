@@ -57,6 +57,8 @@ check_gen9_layer_mode_preserved(struct AGX_TEXTURE semantic)
    assert(hk_pack_native_texture(9, &aligned, &semantic));
 
    /* */
+
+
    assert((unaligned.opaque[3] & (1u << 30)) == 0);
    aligned.opaque[3] ^= 1u << 30;
    assert(memcmp(&aligned, &unaligned, sizeof(aligned)) == 0);
